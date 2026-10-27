@@ -64,3 +64,12 @@ See `bench.py` for benchmark.
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=GeeeekExplorer/nano-vllm&type=Date)](https://www.star-history.com/#GeeeekExplorer/nano-vllm&Date)
+
+## Attention / MLA Learning Lab (feature branch)
+
+This fork includes a staged, synthetic-input-only study of **existing MHA/GQA/MQA → MLA correctness → KV cache → Triton kernels → performance comparisons**. The initial plan reuses nano-vLLM's attention implementation instead of rewriting MHA/GQA/MQA.
+
+- [Roadmap (milestones and acceptance criteria)](ROADMAP.md)
+- [MLA Learning Lab design and experiment protocol](docs/mla-learning-lab/PLAN.md)
+
+The documents describe planned work; they do not claim that the MLA implementation or benchmarks are complete.
