@@ -1,6 +1,6 @@
 # Attention → MLA Learning Lab Roadmap
 
-> 状态：**Planned**（2026-10-27）；目标分支：`feature/mla-learning-lab`；基线：从 `main` 创建。本文件列出待完成的任务，不代表已实现或已测量。
+> 状态：**In Progress**（2026-10-28）；目标分支：`feature/mla-learning-lab`；基线：从 `main` 创建。M0 已建立实际 GPU 正确性基线；MLA 尚未实现。证据见 [`labs/attention/results/BASELINE.md`](labs/attention/results/BASELINE.md)。
 >
 > 详细方案：[`docs/mla-learning-lab/PLAN.md`](docs/mla-learning-lab/PLAN.md)。理论背景：[AI-Infra / MLA 计算强度分析基线](https://github.com/Maverickhj/AI-Infra/blob/main/01_Inbox/MLA%20%E8%AE%A1%E7%AE%97%E5%BC%BA%E5%BA%A6%E5%88%86%E6%9E%90%E5%9F%BA%E7%BA%BF.md)。
 
@@ -8,32 +8,32 @@
 
 以 **nano-vllm 为唯一 Runtime 底座**：直接复用已有 MHA/GQA（以及 `num_kv_heads=1` 下的 MQA）实现；用合成输入/随机初始化权重建立可验证的 Attention/MLA 计算基线；逐步开发 Expanded → Absorbed MLA、压缩 KV Cache、Triton Kernel，最后与业界实现做公平性能对照。
 
-约束：**不要求真实 prompt、tokenizer、checkpoint、生成文本；必须能验证数值正确性。** 当前阶段只提交规划，不更改原有 Runtime 的计算逻辑。
+约束：**不要求真实 prompt、tokenizer、checkpoint、生成文本；必须能验证数值正确性。** 当前新增代码仅在 `labs/attention/`，不更改原有 Runtime 的计算逻辑。
 
 ## 当前焦点
 
-**M0：已有 MHA/GQA/MQA 的代码与测试基线。** 从 nano-vllm 现有 `Qwen3Attention` / `Attention` 开始，而不是重写三个 Attention。M0 完成后才启动 MLA 开发。
+**MHA/GQA 教学骨架与 Correctness Harness。** 原版 `Qwen3Attention` / `Attention` 的 M0 基线已通过；学生 PyTorch 骨架已开始手写，仍有 TODO，尚未完成 student 正确性验收。后续运行验证使用 Megatron-Bridge 镜像。M1 已覆盖增量 decode、mask 和不共享前缀的分页缓存，尚未检查共享前缀生命周期。尚未启动 MLA 开发。
 
 ## Milestones（顺序执行，门禁制）
 
-### M0. 复用与环境基线（Planned）
+### M0. 复用与环境基线（Completed，2026-10-28）
 
-- [ ] 固定上游 Fork 起点、Python/Torch/Triton/FlashAttention/CUDA/Driver/GPU 信息，记录复现命令。
-- [ ] 梳理 `Qwen3Attention → Attention.forward → Context → ModelRunner → KV Cache` 数据流，记录输入输出形状、Prefill/Decode 路由、TP=1 的限制。
-- [ ] 使用同一现有实现的 `num_heads=8, num_kv_heads=8/2/1` 覆盖 MHA/GQA/MQA，不添加生产级重写。
-- [ ] 用固定随机种子初始化 `torch.empty` 权重，构造合成 hidden_states/positions，跑通至少一个真实 nano-vllm Attention GPU 前向。
-- [ ] 对齐独立的 PyTorch 数学 Oracle（优先 SDPA math backend；必要时显式 KV repeat 仅限 Oracle），验证输出形状、数值、Causal Mask 和 Q/K Norm + RoPE。
-- [ ] 记录每种模式的 KV Cache 理论元素数及一次可重复的 GPU baseline（不宣称三者输出在随机独立权重下相等）。
+- [x] 固定上游 Fork 起点、Python/Torch/Triton/FlashAttention/CUDA/Driver/GPU 信息，记录复现命令。
+- [x] 梳理 `Qwen3Attention → Attention.forward → Context → ModelRunner → KV Cache` 数据流，记录输入输出形状、Prefill/Decode 路由、TP=1 的限制。
+- [x] 使用同一现有实现的 `num_heads=8, num_kv_heads=8/2/1` 覆盖 MHA/GQA/MQA，不添加生产级重写。
+- [x] 用固定随机种子初始化 `torch.empty` 权重，构造合成 hidden_states/positions，跑通至少一个真实 nano-vllm Attention GPU 前向。
+- [x] 对齐独立的 PyTorch 数学 Oracle（优先 SDPA math backend；必要时显式 KV repeat 仅限 Oracle），验证输出形状、数值、Causal Mask 和 Q/K Norm + RoPE。
+- [x] 记录每种模式的 KV Cache 理论元素数及一次可重复的 GPU baseline（不宣称三者输出在随机独立权重下相等）。
 
 **DoD：** 单卡 TP=1 的 MHA/GQA/MQA 全部通过参数化正确性测试；测试不依赖预训练 checkpoint；`README/报告` 中给出版本、执行命令和误差统计。未通过不得进入 M1。
 
-### M1. Attention Correctness Harness & 增量缓存（Planned）
+### M1. Attention Correctness Harness & 增量缓存（In Progress）
 
-- [ ] 将合成输入配置、权重初始化、误差统计与可选中间结果收集提取为可复用测试工具。
-- [ ] 验证不等长序列、非平凡因果 Mask、位置偏移；明确多 query decode 的 mask 对齐方式。
-- [ ] 以现有普通 KV Cache 测试从空缓存开始的 Prefill 与逐 token Decode 一致性。
-- [ ] 覆盖不同 batch 的 context length、Page 边界、slot_mapping/prefix cache 基本语义。
-- [ ] 区分 FP64/FP32 小规模参考与 BF16 Kernel 的容差；保存 max_abs/p99_abs/relative_L2。
+- [x] 将合成输入配置、权重初始化、误差统计与可选中间结果收集提取为可复用测试工具。
+- [x] 验证不等长序列、非平凡因果 Mask、位置偏移；明确多 query decode 的 mask 对齐方式。
+- [x] 以现有普通 KV Cache 测试从空缓存开始的 Prefill 与逐 token Decode 一致性。
+- [ ] 覆盖不同 batch 的 context length、Page 边界、slot_mapping/prefix cache 基本语义。（不同长度、跨页、`-1` 和不共享前缀读写已通过；共享前缀生命周期待补。）
+- [x] 区分 FP64/FP32 小规模参考与 BF16 Kernel 的容差；保存 max_abs/p99_abs/relative_L2。
 
 **DoD：** 给定 seed/config 可重复复现 Prefill/Decode 差异；由自动化测试发现故意的错误 Position、Mask 或 KV Head 映射。
 

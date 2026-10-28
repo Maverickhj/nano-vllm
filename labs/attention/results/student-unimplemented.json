@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "timestamp_utc": "2026-10-28T08:58:04.162439+00:00",
+  "backend": "student",
+  "suite": "smoke",
+  "dtype": "bfloat16",
+  "seed": 20261028,
+  "environment": {
+    "python": "3.12.3 (main, Mar  3 2026, 12:15:18) [GCC 13.3.0]",
+    "executable": "/opt/venv/bin/python",
+    "versions": {
+      "torch": "2.12.0a0+0291f960b6.nv26.4.48445190",
+      "triton": "3.6.0+git5d72932fc5.nv26.4",
+      "transformers": "5.8.1",
+      "flash-attn": "2.7.4.post1+git5231d95fe1.45164347"
+    },
+    "cuda": "13.2",
+    "gpu": "NVIDIA L20Y",
+    "sm": [
+      9,
+      0
+    ],
+    "driver": "535.129.03\n535.129.03\n535.129.03\n535.129.03",
+    "git_sha": "8ca2df7a3b4ed6da5a1907b86b7d9b2e12779a3b",
+    "git_dirty": true,
+    "command": "/opt/venv/bin/python -m labs.attention.run --backend student --suite smoke --output labs/attention/results/student-unimplemented.json",
+    "torch_compile_disabled": true
+  },
+  "tolerances": {
+    "projection": [
+      0.008,
+      0.02,
+      0.012
+    ],
+    "norm_rope": [
+      0.04,
+      0.025,
+      0.02
+    ],
+    "output": [
+      0.02,
+      0.03,
+      0.03
+    ]
+  },
+  "scope": "correctness only; no latency or memory-traffic measurements",
+  "deferred": [
+    "MLA equivalence",
+    "MLA kernels",
+    "shared-prefix lifecycle",
+    "performance sweep"
+  ],
+  "cases": [
+    {
+      "label": "layer Hkv=8 B=2 S=7",
+      "passed": false,
+      "status": "not_implemented",
+      "error": "TODO: implement QKV projection and head reshaping"
+    }
+  ],
+  "passed": false,
+  "summary": {
+    "passed": 0,
+    "executed": 1,
+    "planned": 3
+  }
+}

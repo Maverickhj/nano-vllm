@@ -6,7 +6,7 @@
 
 ## 0. 数学符号表
 
-按 **row-vector** 记法，与 AI-Infra MLA 基线统一；代码里按实际张量布局显式注明 batch/heads 轴。
+按 **row-vector** 记法，与 M a v/AI-Infra MLA 基线统一；代码里按实际张量布局显式注明 batch/heads 轴。
 
 | 符号 | 说明 |
 |---|---|
